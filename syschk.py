@@ -32,21 +32,22 @@ else:
 
 # Function to perform operating system checks
 
-
-command = 'dir'
-# command = 'sar 1 3'
+commands = ['sar 1 3', 'vmstat 1 3']
 def os_checks():
     check_section = "Operating system checks"
-    header = output_head(section=check_section, cmd=None)
-    if arg1 == 'FILE':
-        scc.print_to_log(header)
-        scc.print_to_trace(header)
-    else:
-        print(header)
-    header = output_head(section=None, cmd=command)
-    scc.print_to_trace(header)
-    scc.print_cmd_to_trace(command)
-    scc.print_cmd_to_console(command)
-    
+    section_header = output_head(section=check_section, cmd=None)
+    (scc.print_to_log(section_header), scc.print_to_trace(section_header)) if arg1 == 'FILE' else print(section_header)
+    for command in commands:
+        if arg1 == 'FILE':
+            cmd_header = output_head(section=None, cmd=command)
+            scc.print_to_log(cmd_header)
+            scc.print_to_trace(cmd_header)
+            scc.print_cmd_to_log(command)
+            scc.print_cmd_to_trace(command)
+        elif arg1 == 'CONSOLE':
+            cmd_header = output_head(section=None, cmd=command)
+            print(cmd_header)
+            scc.print_cmd_to_console(command)
+        
 os_checks()
     

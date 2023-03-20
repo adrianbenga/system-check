@@ -26,17 +26,23 @@ encoding = "utf-8"
 # Classes and functions to be used by systemcheck.py tool
 
 # Print function to print to log file, trace file or console
-def print_to_log(record):
+def print_to_log(*records):
     with open(log_file, 'a') as log:
-        log.write(record)
+        for record in records:
+            log.write(record)
         
-def print_to_trace(record):
+def print_to_trace(*records):
     with open(trace_file, 'a') as trace:
-        trace.write(record)
+        for record in records:
+            trace.write(record)
         
 def print_cmd_to_trace(cmd):
     cmd_output = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
     [print_to_trace(line.decode(encoding)) for line in cmd_output.stdout.readlines()]
+
+def print_cmd_to_log(cmd):
+    cmd_output = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
+    [print_to_log(line.decode(encoding)) for line in cmd_output.stdout.readlines()]
     
 def print_cmd_to_console(cmd):
     cmd_output = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
@@ -50,7 +56,7 @@ def output_head(cmd, section):
         header="-"*100  + "\n" + "-"*100 + f'\n\tSection "{section}"\t\tDatetime: {timebase}\n' + "-"*100 + "\n" + "-"*100 + "\n"
     else:
         # header="-"*100 + f'\n\tOutput of the command "{cmd}"\t\tDatetime: {timebase}\n' + "-"*100 + "\n"
-        header="\n" + "-"*10 + f'\tOutput of the command "{cmd}"\t' + "-"*10 + "\n\n"
+        header="\n" + "-"*20 + f'\tOutput of the command "{cmd}"\t' + "-"*20 + "\n\n"
     return header
 
 # Class and function that will print messages to the console and logfile
