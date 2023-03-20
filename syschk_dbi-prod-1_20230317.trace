@@ -1,0 +1,118 @@
+ Volume in drive C is OS
+ Volume Serial Number is 1027-5EEA
+
+ Directory of C:\Users\adria_b\Desktop\Projects\ISCTR\Deliverables\Monitoring tools
+
+03/17/2023  03:59 PM    <DIR>          .
+03/16/2023  11:02 AM    <DIR>          ..
+03/17/2023  06:02 PM             1,651 syschk.py
+03/17/2023  06:04 PM             4,097 syschk_config.py
+03/17/2023  06:04 PM                 0 syschk_dbi-prod-1_20230317.log
+03/17/2023  06:03 PM                 0 syschk_dbi-prod-1_20230317.trace
+03/17/2023  06:04 PM    <DIR>          __pycache__
+               4 File(s)          5,748 bytes
+               3 Dir(s)  817,020,993,536 bytes free
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+	Section "Operating system checks"		Datetime: 2023-March-17 18:04
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+ Volume in drive C is OS
+ Volume Serial Number is 1027-5EEA
+
+ Directory of C:\Users\adria_b\Desktop\Projects\ISCTR\Deliverables\Monitoring tools
+
+03/17/2023  03:59 PM    <DIR>          .
+03/16/2023  11:02 AM    <DIR>          ..
+03/17/2023  06:02 PM             1,651 syschk.py
+03/17/2023  06:04 PM             4,097 syschk_config.py
+03/17/2023  06:04 PM               475 syschk_dbi-prod-1_20230317.log
+03/17/2023  06:04 PM             1,128 syschk_dbi-prod-1_20230317.trace
+03/17/2023  06:04 PM    <DIR>          __pycache__
+               4 File(s)          7,351 bytes
+               3 Dir(s)  817,020,985,344 bytes free
+ Volume in drive C is OS
+ Volume Serial Number is 1027-5EEA
+
+ Directory of C:\Users\adria_b\Desktop\Projects\ISCTR\Deliverables\Monitoring tools
+
+03/17/2023  03:59 PM    <DIR>          .
+03/16/2023  11:02 AM    <DIR>          ..
+03/17/2023  06:08 PM             1,700 syschk.py
+03/17/2023  06:08 PM             4,279 syschk_config.py
+03/17/2023  06:04 PM               475 syschk_dbi-prod-1_20230317.log
+03/17/2023  06:04 PM             1,781 syschk_dbi-prod-1_20230317.trace
+03/17/2023  06:09 PM    <DIR>          __pycache__
+               4 File(s)          8,235 bytes
+               3 Dir(s)  817,023,569,920 bytes free
+ Volume in drive C is OS
+ Volume Serial Number is 1027-5EEA
+
+ Directory of C:\Users\adria_b\Desktop\Projects\ISCTR\Deliverables\Monitoring tools
+
+03/17/2023  03:59 PM    <DIR>          .
+03/16/2023  11:02 AM    <DIR>          ..
+03/17/2023  06:09 PM             1,461 syschk.py
+03/17/2023  06:22 PM             4,287 syschk_config.py
+03/17/2023  06:04 PM               475 syschk_dbi-prod-1_20230317.log
+03/17/2023  06:09 PM             2,434 syschk_dbi-prod-1_20230317.trace
+03/17/2023  06:22 PM    <DIR>          __pycache__
+               4 File(s)          8,657 bytes
+               3 Dir(s)  817,025,744,896 bytes free
+ Volume in drive C is OS
+ Volume Serial Number is 1027-5EEA
+
+ Directory of C:\Users\adria_b\Desktop\Projects\ISCTR\Deliverables\Monitoring tools
+
+03/17/2023  03:59 PM    <DIR>          .
+03/16/2023  11:02 AM    <DIR>          ..
+03/17/2023  06:32 PM             1,514 syschk.py
+03/17/2023  06:33 PM             4,261 syschk_config.py
+03/17/2023  06:04 PM               475 syschk_dbi-prod-1_20230317.log
+03/17/2023  06:22 PM             3,087 syschk_dbi-prod-1_20230317.trace
+03/17/2023  06:33 PM    <DIR>          __pycache__
+               4 File(s)          9,337 bytes
+               3 Dir(s)  817,022,435,328 bytes free
+----------------------------------------------------------------------------------------------------	Output of the command "dir"	---------------------------------------------------------------------------------------------------- Volume in drive C is OS
+ Volume Serial Number is 1027-5EEA
+
+ Directory of C:\Users\adria_b\Desktop\Projects\ISCTR\Deliverables\Monitoring tools
+
+03/17/2023  03:59 PM    <DIR>          .
+03/16/2023  11:02 AM    <DIR>          ..
+03/17/2023  06:34 PM             1,546 syschk.py
+03/17/2023  06:33 PM             4,261 syschk_config.py
+03/17/2023  06:04 PM               475 syschk_dbi-prod-1_20230317.log
+03/17/2023  06:34 PM             3,969 syschk_dbi-prod-1_20230317.trace
+03/17/2023  06:33 PM    <DIR>          __pycache__
+               4 File(s)         10,251 bytes
+               3 Dir(s)  817,022,259,200 bytes free
+----------	Output of the command "dir"	---------- Volume in drive C is OS
+ Volume Serial Number is 1027-5EEA
+
+ Directory of C:\Users\adria_b\Desktop\Projects\ISCTR\Deliverables\Monitoring tools
+
+03/17/2023  03:59 PM    <DIR>          .
+03/16/2023  11:02 AM    <DIR>          ..
+03/17/2023  06:34 PM             1,546 syschk.py
+03/17/2023  06:34 PM             4,259 syschk_config.py
+03/17/2023  06:04 PM               475 syschk_dbi-prod-1_20230317.log
+03/17/2023  06:35 PM             4,671 syschk_dbi-prod-1_20230317.trace
+03/17/2023  06:35 PM    <DIR>          __pycache__
+               4 File(s)         10,951 bytes
+               3 Dir(s)  817,022,095,360 bytes free
+----------	Output of the command "dir"	----------
+ Volume in drive C is OS
+ Volume Serial Number is 1027-5EEA
+
+ Directory of C:\Users\adria_b\Desktop\Projects\ISCTR\Deliverables\Monitoring tools
+
+03/17/2023  03:59 PM    <DIR>          .
+03/16/2023  11:02 AM    <DIR>          ..
+03/17/2023  06:34 PM             1,546 syschk.py
+03/17/2023  06:35 PM             4,266 syschk_config.py
+03/17/2023  06:04 PM               475 syschk_dbi-prod-1_20230317.log
+03/17/2023  06:35 PM             5,375 syschk_dbi-prod-1_20230317.trace
+03/17/2023  06:35 PM    <DIR>          __pycache__
+               4 File(s)         11,662 bytes
+               3 Dir(s)  817,021,313,024 bytes free
