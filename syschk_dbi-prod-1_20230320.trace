@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
-	Section "Operating system checks"		Datetime: 2023-March-20 13:04
+	Section "Operating system checks"		Datetime: 2023-March-20 17:35
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
@@ -8,16 +8,73 @@
 
 Linux 5.19.0-35-generic (webapp01) 	03/20/2023 	_x86_64_	(8 CPU)
 
-01:04:40 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
-01:04:41 PM     all      0.63      0.00      0.13      0.00      0.00     99.25
-01:04:42 PM     all      1.01      0.00      0.38      0.00      0.00     98.61
-01:04:43 PM     all      0.38      0.00      0.13      0.00      0.00     99.50
-Average:        all      0.67      0.00      0.21      0.00      0.00     99.12
+05:35:02 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+05:35:03 PM     all     11.49      0.00      4.03      0.12      0.00     84.35
+05:35:04 PM     all      4.06      0.00      0.63      0.00      0.00     95.31
+05:35:05 PM     all      3.65      0.00      1.46      0.00      0.00     94.88
+Average:        all      6.43      0.00      2.06      0.04      0.00     91.47
 
---------------------	Output of the command "vmstat 1 3"	--------------------
+2023-03-20 17:35:05,057 |     INFO | The system CPU idle is 91.
 
-procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
- r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
- 0  0      0 27709336 160628 2770768    0    0    31    16   99  229  1  0 98  0  0
- 0  0      0 27716928 160628 2770768    0    0     0     0  879 2583  1  0 98  0  0
- 0  0      0 27716928 160628 2770768    0    0     0     0  333  669  0  0 100  0  0
+--------------------	Output of the command "free -m"	--------------------
+
+               total        used        free      shared  buff/cache   available
+Mem:           31973        2528       25470         640        3974       28359
+Swap:           2047           0        2047
+
+2023-03-20 17:35:05,062 |     INFO | The system Free Memory is 25470 Mb, more than 10% of the total 31973 Mb.
+
+--------------------	Output of the command "df -h"	--------------------
+
+Filesystem                      Size  Used Avail Use% Mounted on
+tmpfs                           3.2G  2.2M  3.2G   1% /run
+/dev/sda2                       219G   89G  119G  43% /
+tmpfs                            16G   49M   16G   1% /dev/shm
+tmpfs                           5.0M  4.0K  5.0M   1% /run/lock
+/dev/sda1                       511M  5.3M  506M   2% /boot/efi
+/dev/mapper/vgpool-lv_webapp_1  9.8G  110M  9.2G   2% /mnt/webapp_1
+tmpfs                           3.2G  4.7M  3.2G   1% /run/user/1000
+
+2023-03-20 17:35:05,064 |     INFO | /run usage is 1%.
+2023-03-20 17:35:05,064 |     INFO | / usage is 43%.
+2023-03-20 17:35:05,064 |     INFO | /mnt/webapp_1 usage is 2%.
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+	Section "Operating system checks"		Datetime: 2023-March-20 17:36
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+--------------------	Output of the command "sar 1 3"	--------------------
+
+Linux 5.19.0-35-generic (webapp01) 	03/20/2023 	_x86_64_	(8 CPU)
+
+05:36:01 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+05:36:02 PM     all      1.52      0.00      0.25      0.00      0.00     98.22
+05:36:03 PM     all      1.26      0.00      0.25      0.00      0.00     98.48
+05:36:04 PM     all      2.55      0.00      0.13      0.00      0.00     97.32
+Average:        all      1.78      0.00      0.21      0.00      0.00     98.01
+
+2023-03-20 17:36:04,095 |     INFO | The system CPU idle is 98.
+
+--------------------	Output of the command "free -m"	--------------------
+
+               total        used        free      shared  buff/cache   available
+Mem:           31973        2541       25476         620        3954       28365
+Swap:           2047           0        2047
+
+2023-03-20 17:36:04,102 |     INFO | The system Free Memory is 25476 Mb, more than 10% of the total 31973 Mb.
+
+--------------------	Output of the command "df -h"	--------------------
+
+Filesystem                      Size  Used Avail Use% Mounted on
+tmpfs                           3.2G  2.2M  3.2G   1% /run
+/dev/sda2                       219G   89G  119G  43% /
+tmpfs                            16G   43M   16G   1% /dev/shm
+tmpfs                           5.0M  4.0K  5.0M   1% /run/lock
+/dev/sda1                       511M  5.3M  506M   2% /boot/efi
+/dev/mapper/vgpool-lv_webapp_1  9.8G  110M  9.2G   2% /mnt/webapp_1
+tmpfs                           3.2G  4.7M  3.2G   1% /run/user/1000
+
+2023-03-20 17:36:04,110 |     INFO | /run usage is 1%.
+2023-03-20 17:36:04,110 |     INFO | / usage is 43%.
+2023-03-20 17:36:04,110 |     INFO | /mnt/webapp_1 usage is 2%.

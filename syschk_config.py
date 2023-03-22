@@ -4,6 +4,8 @@ import re
 import logging
 import subprocess as sp
 from datetime import datetime
+import cx_Oracle as cx
+
 
 """
 This is the configuration file of the syschk.py monitoring tool,
@@ -14,14 +16,22 @@ that will the used in the main tool
 # Variables defined to be used by syschk.py tool
 
 install_path = "/home/oracle/monitoring_scripts"
-logs_path = "/var/log/systemcheck_logs"
+logs_path = "/home/user/Desktop/Projects/ISCTR/Monitoring tools/system-check"
 exec_user = "oracle"
 hostname = "dbi-prod-1"
 timebase=datetime.now().strftime("%Y-%B-%d %H:%M")
 today = datetime.today()
-log_file = '{}_{}_{}.log'.format("syschk", hostname, today.strftime('%Y%m%d'))
-trace_file = '{}_{}_{}.trace'.format("syschk", hostname, today.strftime('%Y%m%d'))
+log_file = '{}/{}_{}_{}.log'.format(logs_path, "syschk", hostname, today.strftime('%Y%m%d'))
+trace_file = '{}/{}_{}_{}.trace'.format(logs_path, "syschk", hostname, today.strftime('%Y%m%d'))
 encoding = "utf-8"
+
+# Oracle specific variables
+
+oracle_host = '192.168.0.38'
+oracle_user = 'system'
+oracle_user_psswd = 'system123'
+oracle_service = 'orcldb'
+connect_string = f'{oracle_user}/{oracle_user_psswd}@{oracle_host}/{oracle_service}'
 
 # Classes and functions to be used by systemcheck.py tool
 
@@ -99,12 +109,12 @@ stdout_handler.setLevel(logging.DEBUG)
 stdout_handler.setFormatter(CustomFormatter(fmt))
 
 # create file handler for logging to a file (logs all five levels)
-logfile_handler = logging.FileHandler(log_file)
+logfile_handler = logging.FileHandler(log_file, 'a')
 logfile_handler.setLevel(logging.DEBUG)
 logfile_handler.setFormatter(logging.Formatter(fmt))
 
 # create file handler for the trace file (logs all five levels)
-tracefile_handler = logging.FileHandler(trace_file)
+tracefile_handler = logging.FileHandler(trace_file, 'a')
 tracefile_handler.setLevel(logging.DEBUG)
 tracefile_handler.setFormatter(logging.Formatter(fmt))
 
@@ -119,6 +129,67 @@ tracefile_handler.setFormatter(logging.Formatter(fmt))
 # logger.warning('This is a warning-level message')
 # logger.error('This is an error-level message')
 # logger.critical('This is a critical-level message')
+
+# SQL statements for Oracle database check section
+
+sql_tbs_usage = """
+    SELECT
+    dts.tablespace_name,
+    NVL(ddf.bytes / 1024 / 1024, 0) avail,
+    NVL(ddf.bytes - NVL(dfs.bytes, 0), 0)/1024/1024 used,
+    NVL(dfs.bytes / 1024 / 1024, 0) free,
+    TO_CHAR(NVL((ddf.bytes - NVL(dfs.bytes, 0)) / ddf.bytes * 100, 0), '990.0') pctused
+    FROM
+    sys.dba_tablespaces dts,
+    (select tablespace_name, sum(bytes) bytes
+    from dba_data_files group by tablespace_name) ddf,
+    (select tablespace_name, sum(bytes) bytes
+    from dba_free_space group by tablespace_name) dfs
+    WHERE
+    dts.tablespace_name = ddf.tablespace_name(+)
+    AND dts.tablespace_name = dfs.tablespace_name(+)
+    AND NOT (dts.extent_management like 'LOCAL'
+    AND dts.contents like 'TEMPORARY')
+    UNION ALL
+    SELECT
+    dts.tablespace_name,
+    NVL(dtf.bytes / 1024 / 1024, 0) avail,
+    NVL(t.bytes, 0)/1024/1024 used,
+    NVL(dtf.bytes - NVL(t.bytes, 0), 0)/1024/1024 free,
+    TO_CHAR(NVL(t.bytes / dtf.bytes * 100, 0), '990.0') as pctused
+    FROM
+    sys.dba_tablespaces dts,
+    (select tablespace_name, sum(bytes) bytes
+    from dba_temp_files group by tablespace_name) dtf,
+    (select tablespace_name, sum(bytes_used) bytes
+    from v$temp_space_header group by tablespace_name) t
+    WHERE
+    dts.tablespace_name = dtf.tablespace_name(+)
+    AND dts.tablespace_name = t.tablespace_name(+)
+    AND dts.extent_management like 'LOCAL'
+    AND dts.contents like 'TEMPORARY'
+    order by 1
+"""
+
+sql_db_bkp_check = """
+    SELECT SESSION_KEY, INPUT_TYPE, STATUS,
+    TO_CHAR(START_TIME,'mm/dd/yy hh24:mi') start_time,
+    TO_CHAR(END_TIME,'mm/dd/yy hh24:mi') end_time,
+    ELAPSED_SECONDS/60 min
+    FROM V$RMAN_BACKUP_JOB_DETAILS
+    WHERE INPUT_TYPE LIKE 'DB %'
+    ORDER BY SESSION_KEY DESC FETCH FIRST 1 ROWS ONLY
+"""
+
+sql_arch_bkp_check = """
+    SELECT SESSION_KEY, INPUT_TYPE, STATUS,
+    TO_CHAR(START_TIME,'mm/dd/yy hh24:mi') start_time,
+    TO_CHAR(END_TIME,'mm/dd/yy hh24:mi') end_time,
+    ELAPSED_SECONDS/60 min
+    FROM V$RMAN_BACKUP_JOB_DETAILS
+    WHERE INPUT_TYPE LIKE 'ARCHIVELOG'
+    ORDER BY SESSION_KEY DESC FETCH FIRST 1 ROWS ONLY
+"""
 
 
 
