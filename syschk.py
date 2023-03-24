@@ -127,13 +127,28 @@ def db_checks():
             cursor.execute(sql)
             if sql == scc.sql_tbs_usage:
                 for row in cursor.fetchall():
-                    tbs_name, tbs_size, tbs_used, tbs_free, tbs_used_percent = [*row]
-                    if float(tbs_used_percent) >= tbs_used_critical_threshold:
-                        logger.critical(f"Tablespace {tbs_name} usage is {tbs_used_percent}%!")
-                    elif float(tbs_used_percent) >= tbs_used_warning_threshold:
-                        logger.warning(f"Tablespace {tbs_name} usage is {tbs_used_percent}%!")
+                    tbs_name, tbs_type, tbs_size, tbs_used, tbs_free, tbs_used_percent = [*row]
+                    # check if the tablespace has at list one autoextensible datafile
+                    # if yes, the tablespace will autoextend
+                    if tbs_type == 'TEMPORARY':
+                        sql_tbs_autoext = f'select count(*) from dba_temp_files where tablespace_name = \'{tbs_name}\' and autoextensible = \'YES\''
                     else:
-                        logger.info(f"Tablespace {tbs_name} usage is {tbs_used_percent}%.")
+                        sql_tbs_autoext = f'select count(*) from dba_data_files where tablespace_name = \'{tbs_name}\' and autoextensible = \'YES\''
+                    cursor1 = con.cursor()
+                    cursor1.execute(sql_tbs_autoext)
+                    tbs_autoextensible = 'ON' if int(cursor1.fetchone()[0]) >=1 else 'OFF'
+                    if float(tbs_used_percent) >= tbs_used_critical_threshold and tbs_autoextensible == 'OFF':
+                        logger.critical(f"Tablespace {tbs_name} usage is {tbs_used_percent}% and AUTOEXTEND is {tbs_autoextensible} for all datafiles!")
+                    elif float(tbs_used_percent) >= tbs_used_critical_threshold and tbs_autoextensible == 'ON':
+                        logger.info(f"Tablespace {tbs_name} usage is {tbs_used_percent}% and AUTOEXTEND is {tbs_autoextensible} for at least one datafile")
+                    elif float(tbs_used_percent) >= tbs_used_warning_threshold and tbs_autoextensible == 'OFF':
+                        logger.warning(f"Tablespace {tbs_name} usage is {tbs_used_percent}% and AUTOEXTEND is {tbs_autoextensible} for all datafiles!")
+                    elif float(tbs_used_percent) >= tbs_used_warning_threshold and tbs_autoextensible == 'ON':
+                        logger.info(f"Tablespace {tbs_name} usage is {tbs_used_percent}% and AUTOEXTEND is {tbs_autoextensible} for at least one datafile")
+                    else:
+                        logger.info(f"Tablespace {tbs_name} usage is {tbs_used_percent} and AUTOEXTEND is {tbs_autoextensible} for at least one datafile.")
+            
+            # checking the status of the last backup of the database and archivelog
             if sql == scc.sql_db_bkp_check or scc.sql_arch_bkp_check:
                 for row in cursor.fetchall():
                     bkp_session_key, bkp_type, bkp_status, bkp_start_time, bkp_end_time, bkp_time_minutes = [*row]
@@ -161,15 +176,27 @@ def listener_checks():
     (scc.print_to_log(section_header), scc.print_to_trace(section_header)) if arg1 == 'FILE' else print(section_header)
     for command in listener_commands:
         cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
+        return_code = cmd_output.wait()
         cmd_header = output_head(section=None, cmd=command)
         (scc.print_to_trace(cmd_header), scc.print_cmd_to_trace(command), scc.print_to_trace('\n')) if arg1 == 'FILE' else None
         
-        # parse the "sar" output, retain the Average line and the average idle value as integer
+        # parse the "lsnrctl status" output, make sure listenr is started and the service is registered
         if command == 'lsnrctl status':
-            for line in cmd_output.stdout.readlines():
-                print(line)
+            if return_code != 0:
+                logger.critical(f"Listener NOT started!")
+            else:
+                logger.info(f"Listener is started!")
+                service_registered = False
+                for line in cmd_output.stdout.readlines():
+                    if f'Service "{scc.oracle_service}" has 1 instance' in line.strip().decode(encoding):
+                        service_registered = True
+                if service_registered:
+                    logger.info(f"Service {scc.oracle_service} is registered with listener")
+                else:
+                    logger.critical(f"Service {scc.oracle_service} is NOT registered with listener")
+
+
 
 # os_checks()
 db_checks()
-listener_checks()
-    
+# listener_checks()

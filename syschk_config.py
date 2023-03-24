@@ -135,6 +135,7 @@ tracefile_handler.setFormatter(logging.Formatter(fmt))
 sql_tbs_usage = """
     SELECT
     dts.tablespace_name,
+    dts.contents,
     NVL(ddf.bytes / 1024 / 1024, 0) avail,
     NVL(ddf.bytes - NVL(dfs.bytes, 0), 0)/1024/1024 used,
     NVL(dfs.bytes / 1024 / 1024, 0) free,
@@ -148,11 +149,11 @@ sql_tbs_usage = """
     WHERE
     dts.tablespace_name = ddf.tablespace_name(+)
     AND dts.tablespace_name = dfs.tablespace_name(+)
-    AND NOT (dts.extent_management like 'LOCAL'
-    AND dts.contents like 'TEMPORARY')
+    AND NOT dts.contents like 'TEMPORARY'
     UNION ALL
     SELECT
     dts.tablespace_name,
+    dts.contents,
     NVL(dtf.bytes / 1024 / 1024, 0) avail,
     NVL(t.bytes, 0)/1024/1024 used,
     NVL(dtf.bytes - NVL(t.bytes, 0), 0)/1024/1024 free,
@@ -166,9 +167,12 @@ sql_tbs_usage = """
     WHERE
     dts.tablespace_name = dtf.tablespace_name(+)
     AND dts.tablespace_name = t.tablespace_name(+)
-    AND dts.extent_management like 'LOCAL'
     AND dts.contents like 'TEMPORARY'
     order by 1
+"""
+
+sql_tbs_autoextend = """
+    select tablespace_name, autoextensible from dba_data_files
 """
 
 sql_db_bkp_check = """
@@ -180,6 +184,8 @@ sql_db_bkp_check = """
     WHERE INPUT_TYPE LIKE 'DB %'
     ORDER BY SESSION_KEY DESC FETCH FIRST 1 ROWS ONLY
 """
+
+
 
 sql_arch_bkp_check = """
     SELECT SESSION_KEY, INPUT_TYPE, STATUS,

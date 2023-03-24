@@ -1,7 +1,2 @@
-[38;5;39m2023-03-22 14:00:04,816 |     INFO | The system CPU idle is 90.[0m
-[38;5;39m2023-03-22 14:00:04,824 |     INFO | The system Free Memory is 20045 Mb, more than 10% of the total 31973 Mb.[0m
-[38;5;39m2023-03-22 14:00:04,831 |     INFO | File system /run usage is 1%.[0m
-[38;5;39m2023-03-22 14:00:04,831 |     INFO | File system / usage is 45%.[0m
-[38;5;39m2023-03-22 14:00:04,831 |     INFO | File system /mnt/webapp_1 usage is 2%.[0m
-[31;1m2023-03-22 14:00:04,833 | CRITICAL | Connection on host 192.168.0.38 using oracle service orcldb is NOT possible![0m
-[31;1m2023-03-22 14:00:04,833 | CRITICAL | Database checks cannot be performed until the connection to tthe database is fixed!![0m
+[31;1m2023-03-24 08:00:01,458 | CRITICAL | Connection on host 192.168.0.38 using oracle service orcldb is NOT possible![0m
+[31;1m2023-03-24 08:00:01,458 | CRITICAL | Database checks cannot be performed until the connection to tthe database is fixed!![0m
