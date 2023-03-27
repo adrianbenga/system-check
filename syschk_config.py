@@ -16,7 +16,8 @@ that will the used in the main tool
 # Variables defined to be used by syschk.py tool
 
 install_path = "/home/oracle/monitoring_scripts"
-logs_path = "/home/user/Desktop/Projects/ISCTR/Monitoring tools/system-check"
+# logs_path = "/home/user/Desktop/Projects/ISCTR/Monitoring tools/system-check"
+logs_path = "/home/oracle/monitoring_scripts"
 exec_user = "oracle"
 hostname = "dbi-prod-1"
 timebase=datetime.now().strftime("%Y-%B-%d %H:%M")
@@ -27,11 +28,18 @@ encoding = "utf-8"
 
 # Oracle specific variables
 
-oracle_host = '192.168.0.38'
+# oracle_host = '192.168.0.38'
+oracle_host = '192.168.86.28'
 oracle_user = 'system'
 oracle_user_psswd = 'system123'
 oracle_service = 'orcldb'
 connect_string = f'{oracle_user}/{oracle_user_psswd}@{oracle_host}/{oracle_service}'
+scan_listeners = ['LISTENER_SCAN1', 'LISTENER_SCAN2', 'LISTENER_SCAN3']
+# scan_name = 'rac-scan.isctr-mt.ro'
+scan_name = 'localhost'
+scan_vips = ['scan1', 'scan2', 'scan3']
+scan_connect_string = f'{oracle_user}/{oracle_user_psswd}@{scan_name}/{oracle_service}'
+
 
 # Classes and functions to be used by systemcheck.py tool
 
@@ -63,10 +71,12 @@ def print_cmd_to_console(cmd):
 
 def output_head(cmd, section):
     if section:
-        header="-"*100  + "\n" + "-"*100 + f'\n\tSection "{section}"\t\tDatetime: {timebase}\n' + "-"*100 + "\n" + "-"*100 + "\n"
+        # header="-"*100 + f'\n\tSection "{section}"\t\tDatetime: {timebase}\n' + "-"*100 + "\n"
+        header= "\n" + "-"*5 + f' Section "{section}"' + "-"*5
     else:
         # header="-"*100 + f'\n\tOutput of the command "{cmd}"\t\tDatetime: {timebase}\n' + "-"*100 + "\n"
-        header="\n" + "-"*20 + f'\tOutput of the command "{cmd}"\t' + "-"*20 + "\n\n"
+        # header="\n" + "-"*20 + f'\tOutput of the command "{cmd}"\t' + "-"*20 + "\n\n"
+        header= "\n" + "-"*5 + f' Section "{section}"' + "-"*5
     return header
 
 # Class and function that will print messages to the console and logfile
@@ -185,8 +195,6 @@ sql_db_bkp_check = """
     ORDER BY SESSION_KEY DESC FETCH FIRST 1 ROWS ONLY
 """
 
-
-
 sql_arch_bkp_check = """
     SELECT SESSION_KEY, INPUT_TYPE, STATUS,
     TO_CHAR(START_TIME,'mm/dd/yy hh24:mi') start_time,
@@ -197,6 +205,8 @@ sql_arch_bkp_check = """
     ORDER BY SESSION_KEY DESC FETCH FIRST 1 ROWS ONLY
 """
 
-
-
+sql_asm_diskgroup_check = """
+    select NAME, STATE, TYPE, TOTAL_MB, FREE_MB, OFFLINE_DISKS 
+    from V$ASM_DISKGROUP_STAT
+"""
 

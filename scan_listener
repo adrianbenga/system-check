@@ -1,0 +1,6 @@
+SCAN Listener LISTENER_SCAN1 is enabled
+SCAN listener LISTENER_SCAN1 is running on node dbi-prod-2
+SCAN Listener LISTENER_SCAN2 is enabled
+SCAN listener LISTENER_SCAN2 is running on node dbi-prod-1
+SCAN Listener LISTENER_SCAN3 is enabled
+SCAN listener LISTENER_SCAN3 is running on node dbi-prod-1

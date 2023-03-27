@@ -169,7 +169,7 @@ listener_commands = ['lsnrctl status',]
 
 def listener_checks():
     # printing the section header
-    check_section = "Listener checks"
+    check_section = "Local listener checks"
     section_header = output_head(section=check_section, cmd=None)
     
     # printing the section header
@@ -196,7 +196,91 @@ def listener_checks():
                     logger.critical(f"Service {scc.oracle_service} is NOT registered with listener")
 
 
+# Function to perform ASM checks
 
-# os_checks()
+asm_sql = scc.sql_asm_diskgroup_check
+# asm diskgroups occupancy thresholds
+asm_dg_used_critical_threshold = 95
+asm_dg_used_warning_threshold = 90
+
+def asm_checks():
+    # print specific section header
+    check_section = "Automatic Storage Management checks"
+    section_header = output_head(section=check_section, cmd=None)
+    (scc.print_to_log(section_header), scc.print_to_trace(section_header)) if arg1 == 'FILE' else print(section_header)
+    
+    # check if oracle service is responding
+    try: 
+        con = cx.connect(scc.connect_string)
+    except cx.DatabaseError:
+        logger.critical(f"Connection on host {scc.oracle_host} using oracle service {scc.oracle_service} is NOT possible!")
+        logger.critical(f"Database checks cannot be performed until the connection to tthe database is fixed!!")
+    else:
+        cursor = con.cursor()
+        cursor.execute(asm_sql)
+        for row in cursor.fetchall():
+            dg_name, dg_state, dg_redundancy_type, dg_total_size_mb, dg_free_size_mb, dg_offline_disks = [*row]
+            # dg_name, dg_state, dg_redundancy_type, dg_total_size_mb, dg_free_size_mb, dg_offline_disks = ['DATA', 'CONNECTED', 'EXTERN', 1023996, 50000, 0]
+            if dg_state != 'CONNECTED':
+                logger.critical(f"ASM disk group {dg_name} is not connected! Current disk group state is {dg_state}.")
+            elif dg_offline_disks != 0:
+                logger.warning(f"ASM disk group {dg_name} is {dg_state} but some disks are offline! Number of offline disks is {dg_offline_disks}.")
+            else:
+                logger.info(f"ASM disk group {dg_name} is {dg_state}, redundancy set to {dg_redundancy_type} and all disks are online.")
+            
+            asm_dg_free_percentage = (dg_free_size_mb * 100) / dg_total_size_mb  
+            asm_dg_used_percentage = 100 - asm_dg_free_percentage
+
+            if asm_dg_used_percentage >= asm_dg_used_critical_threshold:
+                logger.critical(f"Total size of ASM disk group {dg_name} is {round(dg_total_size_mb / 1024)} GB, used space is {round((dg_total_size_mb - dg_free_size_mb) / 1024)} GB. Less than {round(asm_dg_free_percentage)}% of space is available!")
+            elif asm_dg_used_percentage >= asm_dg_used_warning_threshold:
+                logger.warning(f"Total size of ASM disk group {dg_name} is {round(dg_total_size_mb / 1024)} GB, used space is {round((dg_total_size_mb - dg_free_size_mb) / 1024)} GB. Less than {round(asm_dg_free_percentage)}% of space is available!")
+            else:
+                logger.info(f"Total size of ASM disk group {dg_name} is {round(dg_total_size_mb / 1024)} GB, used space is {round((dg_total_size_mb - dg_free_size_mb) / 1024)} GB. {round(asm_dg_free_percentage)}% of space is available.")
+        
+ 
+# Function to perform Oracle RAC checks
+
+rac_commands = ['cat scan_listener', 'cat scan_vip']
+
+def rac_checks():
+    # print specific section header
+    check_section = "Oracle RAC checks"
+    section_header = output_head(section=check_section, cmd=None)
+    (scc.print_to_log(section_header), scc.print_to_trace(section_header)) if arg1 == 'FILE' else print(section_header)
+    
+    # check if scan listeners are started
+    for command in rac_commands:
+        cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
+        cmd_header = output_head(section=None, cmd=command)
+        for line in cmd_output.stdout.readlines():
+            line = line.strip().decode(encoding)
+            if 'is not running' in line:
+                logger.critical(line)
+            else:
+                logger.info(line)
+    # cmd_output = sp.Popen('ping -c 1 scc.scan_name', shell=True, stdout=sp.PIPE)
+    cmd_output = sp.Popen('ping -c 4 localhost', shell=True, stdout=sp.PIPE)
+    return_code = cmd_output.wait()
+    cmd_header = output_head(section=None, cmd=command)
+    if return_code != 0:
+        logger.critical(f"Scan name {scc.scan_name} not answering to ping!")
+    else:
+        logger.info(f"Scan name {scc.scan_name} answering to ping.")
+    
+    # check if oracle service is responding on scan name
+    try: 
+        con = cx.connect(scc.scan_connect_string)
+    except cx.DatabaseError:
+        logger.critical(f"Connection on SCAN name {scc.scan_name} using oracle service {scc.oracle_service} is NOT possible!")
+        logger.critical(f"Database checks cannot be performed until the connection to the database is fixed!!")
+    else:
+        logger.info(f"Connection on SCAN name {scc.scan_name} using oracle service {scc.oracle_service} is OK!")
+    
+
+
+os_checks()
+listener_checks()
 db_checks()
-# listener_checks()
+asm_checks()
+rac_checks()
