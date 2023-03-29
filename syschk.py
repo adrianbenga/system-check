@@ -1,4 +1,5 @@
 import sys
+import os
 import logging
 import syschk_config as scc
 import subprocess as sp
@@ -6,33 +7,84 @@ import cx_Oracle as cx
 from syschk_config import logger, output_head
 
 # ----------------------------------------------------------------------------
-# Managing script arguments
+# Initializing Oracle Environment Variables for cx_Oracle
 # ----------------------------------------------------------------------------
-nb_arguments = 1
-arg_list = sys.argv
-arg1 = arg_list[1].upper()
-encoding = "utf-8"
-if len(arg_list) < nb_arguments + 1:
-    logger.error('Output argument is mandatory and must be set to "console" or "logfile"')
-    exit(1)
-else:
-    if arg1 == 'CONSOLE':
-        # create the stdout handler for logging to the console (logs all five levels)
-        stdout_handler = logging.StreamHandler()
-        stdout_handler.setLevel(logging.DEBUG)
-        stdout_handler.setFormatter(scc.CustomFormatter(scc.fmt))
-        logger.addHandler(stdout_handler)
-    elif arg1 == 'FILE':
-        # create file handler for logging to a file (logs all five levels)
-        logfile_handler = logging.FileHandler(scc.log_file, 'a')
-        logfile_handler.setLevel(logging.DEBUG)
-        logfile_handler.setFormatter(logging.Formatter(scc.fmt))
-        logger.addHandler(logfile_handler)
-        
-    else:
-        logger.error('The first argument is mandatory and must be "console" or "file"')
-        exit(1)
+os.environ['ORACLE_HOME'] = scc.ORACLE_HOME
+os.environ['LD_LIBRARY_PATH'] = scc.LD_LIBRARY_PATH
+cx.init_oracle_client(lib_dir=scc.LD_LIBRARY_PATH)
 
+# ----------------------------------------------------------------------------
+# Help message
+# ----------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# Managing script arguments and help message
+# ----------------------------------------------------------------------------
+nb_arguments = 2
+arg_list = sys.argv
+file_name = arg_list[0]
+help = f"""
+Usage: {file_name} <console|file> <debug|info|warning|error|critical>
+
+The monitoring tool takes 2 mandatory arguments:
+    - output, which must be either "console" to print the output to the console, 
+      or "file" to print the output to a log file
+    - verbosity, which must be one of the following: debug|info|warning|error|critical  
+"""
+
+if len(arg_list) != nb_arguments + 1:
+    print(f'\nERROR: Output and Verbosity arguments are mandatory!\n')
+    print(help)
+    sys.exit(1)
+else:
+    output = arg_list[1].upper()
+    verbosity = arg_list[2].upper()
+    
+if output not in ['CONSOLE', 'FILE']:
+    print(f'\nERROR: Output argument is mandatory and must be "console" or "file"\n')
+    print(help)
+    sys.exit(1)    
+if verbosity not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+    print(f'\nERROR: Verbosity argument is mandatory and must be "debug", "info", "warning", "error" or "critical"\n')
+    print(help)
+    sys.exit(1)
+        
+if output == 'CONSOLE':
+    # create the stdout handler for logging to the console (logs all five levels)
+    stdout_handler = logging.StreamHandler()
+    if verbosity == 'DEBUG':
+        stdout_handler.setLevel(logging.DEBUG)
+    elif verbosity == 'INFO':
+        stdout_handler.setLevel(logging.INFO)
+    elif verbosity == 'WARNING':
+        stdout_handler.setLevel(logging.WARNING)
+    elif verbosity == 'ERROR':
+        stdout_handler.setLevel(logging.ERROR)
+    elif verbosity == 'CRITICAL':
+        stdout_handler.setLevel(logging.CRITICAL)
+    else:
+        stdout_handler.setLevel(logging.DEBUG)
+    stdout_handler.setFormatter(scc.CustomFormatter(scc.fmt))
+    logger.addHandler(stdout_handler)
+elif output == 'FILE':
+    # create file handler for logging to a file (logs all five levels)
+    logfile_handler = logging.FileHandler(scc.log_file, 'a')
+    if verbosity == 'DEBUG':
+        logfile_handler.setLevel(logging.DEBUG)
+    elif verbosity == 'INFO':
+        logfile_handler.setLevel(logging.INFO)
+    elif verbosity == 'WARNING':
+        logfile_handler.setLevel(logging.WARNING)
+    elif verbosity == 'ERROR':
+        logfile_handler.setLevel(logging.ERROR)
+    elif verbosity == 'CRITICAL':
+        logfile_handler.setLevel(logging.CRITICAL)
+    else:
+        logfile_handler.setLevel(logging.DEBUG)
+    logfile_handler.setFormatter(logging.Formatter(scc.fmt))
+    logger.addHandler(logfile_handler)
+    
 # ----------------------------------------------------------------------------
 # Function to perform operating system checks
 # ----------------------------------------------------------------------------
@@ -42,7 +94,7 @@ def os_checks():
     section_header = output_head(section=check_section, cmd=None)
     
     # printing the section header
-    scc.print_to_log(section_header) if arg1 == 'FILE' else print(section_header)
+    scc.print_to_log(section_header) if output == 'FILE' else print(section_header)
     for command in os_commands:
         cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
         # parse the "sar" output, retain the Average line and the average idle value as integer
@@ -86,6 +138,11 @@ def os_checks():
                         logger.warning(f"File system {fs} usage is {fs_used_percent}%. Less than {(100 - scc.fs_used_warning_threshold)} space available!")
                     else:
                         logger.info(f"File system {fs} usage is {fs_used_percent}%.")
+                        
+        logger.debug(f'Output of the command: {command}')
+        cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
+        for line in cmd_output.stdout.readlines():
+            logger.debug(line.strip().decode(encoding))
 
 # ----------------------------------------------------------------------------
 # Function to perform listener checks
@@ -95,25 +152,29 @@ def listener_checks():
     # printing the section header
     check_section = "Local listener checks"
     section_header = output_head(section=check_section, cmd=None)
-    scc.print_to_log(section_header) if arg1 == 'FILE' else print(section_header)
+    scc.print_to_log(section_header) if output == 'FILE' else print(section_header)
     
     for command in listener_commands:
         cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
         return_code = cmd_output.wait()
         # parse the "lsnrctl status" output, make sure listenr is started and the service is registered
-        if command == 'lsnrctl status':
-            if return_code != 0:
-                logger.critical(f"Listener NOT started!")
+        if return_code != 0:
+            logger.critical(f"Listener NOT started!")
+        else:
+            logger.info(f"Listener is started.")
+            service_registered = False
+            for line in cmd_output.stdout.readlines():
+                if f'Service "{scc.oracle_service}" has 1 instance' in line.strip().decode(encoding):
+                    service_registered = True
+            if service_registered:
+                logger.info(f"Service {scc.oracle_service} is registered with listener")
             else:
-                logger.info(f"Listener is started!")
-                service_registered = False
-                for line in cmd_output.stdout.readlines():
-                    if f'Service "{scc.oracle_service}" has 1 instance' in line.strip().decode(encoding):
-                        service_registered = True
-                if service_registered:
-                    logger.info(f"Service {scc.oracle_service} is registered with listener")
-                else:
-                    logger.critical(f"Service {scc.oracle_service} is NOT registered with listener")
+                logger.critical(f"Service {scc.oracle_service} is NOT registered with listener")
+        
+        logger.debug(f'Output of the command: {command}')
+        cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
+        for line in cmd_output.stdout.readlines():
+            logger.debug(line.strip().decode(encoding))
 
 # ----------------------------------------------------------------------------
 # Function to perform database checks
@@ -123,7 +184,7 @@ def db_checks():
     # print specific section header
     check_section = "Database checks"
     section_header = output_head(section=check_section, cmd=None)
-    scc.print_to_log(section_header) if arg1 == 'FILE' else print(section_header)
+    scc.print_to_log(section_header) if output == 'FILE' else print(section_header)
     
     # check if oracle service is responding
     try: 
@@ -149,7 +210,8 @@ def db_checks():
                         sql_tbs_autoext = f'select count(*) from dba_data_files where tablespace_name = \'{tbs_name}\' and autoextensible = \'YES\''
                     cursor1 = con.cursor()
                     cursor1.execute(sql_tbs_autoext)
-                    tbs_autoextensible = 'ON' if int(cursor1.fetchone()[0]) >=1 else 'OFF'
+                    autoextend_files = cursor1.fetchone()[0] 
+                    tbs_autoextensible = 'ON' if int(autoextend_files) >=1 else 'OFF'
                     if float(tbs_used_percent) >= scc.tbs_used_critical_threshold and tbs_autoextensible == 'OFF':
                         logger.critical(f"Tablespace {tbs_name} usage is {tbs_used_percent}% and AUTOEXTEND is {tbs_autoextensible} for all datafiles!")
                     elif float(tbs_used_percent) >= scc.tbs_used_critical_threshold and tbs_autoextensible == 'ON':
@@ -160,6 +222,9 @@ def db_checks():
                         logger.info(f"Tablespace {tbs_name} usage is {tbs_used_percent}% and AUTOEXTEND is {tbs_autoextensible} for at least one datafile")
                     else:
                         logger.info(f"Tablespace {tbs_name} usage is {tbs_used_percent} and AUTOEXTEND is {tbs_autoextensible} for at least one datafile.")
+                        
+                    logger.debug(f'tbs_name, tbs_type, tbs_size, tbs_used, tbs_free, tbs_used_percent = {[*row]}')
+                    logger.debug(f'Number of datafiles with autoextent ON = {autoextend_files}')
             
             # checking the status of the last backup of the database and archivelog
             if sql == sql_db_bkp_check or sql_arch_bkp_check:
@@ -174,6 +239,8 @@ def db_checks():
                         logger.info(f"{bkp_scope}  backup {bkp_type} is {bkp_status}, started on {bkp_start_time} and not yet completed.")
                     else:
                         logger.warning(f"{bkp_scope}  backup {bkp_type} {bkp_status} on {bkp_end_time}!")
+                        
+                    logger.debug(f'bkp_session_key, bkp_type, bkp_status, bkp_start_time, bkp_end_time, bkp_time_minutes = {[*row]}')
 
 # ----------------------------------------------------------------------------
 # Function to perform ASM checks
@@ -183,7 +250,7 @@ def asm_checks():
     # print specific section header
     check_section = "Automatic Storage Management checks"
     section_header = output_head(section=check_section, cmd=None)
-    scc.print_to_log(section_header) if arg1 == 'FILE' else print(section_header)
+    scc.print_to_log(section_header) if output == 'FILE' else print(section_header)
     
     # check if oracle service is responding
     try: 
@@ -214,6 +281,8 @@ def asm_checks():
             else:
                 logger.info(f"Total size of ASM disk group {dg_name} is {round(dg_total_size_mb / 1024)} GB, used space is {round((dg_total_size_mb - dg_free_size_mb) / 1024)} GB. {round(asm_dg_free_percentage)}% of space is available.")
         
+            logger.debug(f'dg_name, dg_state, dg_redundancy_type, dg_total_size_mb, dg_free_size_mb, dg_offline_disks = {[*row]}')
+            
 # ----------------------------------------------------------------------------
 # Function to perform Oracle RAC checks
 # ----------------------------------------------------------------------------
@@ -222,7 +291,7 @@ def rac_checks():
     # print specific section header
     check_section = "Oracle RAC checks"
     section_header = output_head(section=check_section, cmd=None)
-    scc.print_to_log(section_header) if arg1 == 'FILE' else print(section_header)
+    scc.print_to_log(section_header) if output == 'FILE' else print(section_header)
     
     # check if scan listeners are started
     for command in rac_commands:
@@ -233,15 +302,30 @@ def rac_checks():
                 logger.critical(line)
             else:
                 logger.info(line)
-    # cmd_output = sp.Popen('ping -c 1 scc.scan_name', shell=True, stdout=sp.PIPE)
-    cmd_output = sp.Popen('ping -c 4 localhost', shell=True, stdout=sp.PIPE)
+                
+        logger.debug(f'Output of the command: {command}')        
+        cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
+        for line in cmd_output.stdout.readlines():
+            logger.debug(line.strip().decode(encoding))
+    
+    
+    # command = 'ping -c 1 scc.scan_name'
+    command = 'ping -c 1 localhost'
+    logger.debug(f'Output of the command: {command}')
+    cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
     return_code = cmd_output.wait()
     if return_code != 0:
         logger.critical(f"Scan name {scc.scan_name} not answering to ping!")
     else:
         logger.info(f"Scan name {scc.scan_name} answering to ping.")
     
+    logger.debug(f'Output of the command: {command}')
+    cmd_output = sp.Popen(command, shell=True, stdout=sp.PIPE)
+    for line in cmd_output.stdout.readlines():
+        logger.debug(line.strip().decode(encoding))
+    
     # check if oracle service is responding on scan name
+    logger.debug(f'Trying to connect to the database using connect string: {scc.scan_connect_string}')
     try: 
         cx.connect(scc.scan_connect_string)
     except cx.DatabaseError:
@@ -327,11 +411,13 @@ sql_asm_diskgroup_check = """
 # ----------------------------------------------------------------------------
 
 # Setting local variables 
+encoding = "utf-8"
 os_commands = ['sar 1 3', 'free -m', 'df -h']
 fs_tocheck_list = ['/', '/mnt/webapp_1', '/run']
-listener_commands = ['lsnrctl status',]
+listener_commands = [f'{scc.ORACLE_HOME}/bin/lsnrctl status',]
 db_sqls = [sql_tbs_usage, sql_db_bkp_check, sql_arch_bkp_check]
-rac_commands = ['cat scan_listener', 'cat scan_vip']
+rac_commands = [f'cat {scc.logs_path}/scan_listener', f'cat {scc.logs_path}/scan_vip']
+# rac_commands = [f'{scc.GRID_HOME}/bin/srvctl status scan_listener', f'{scc.GRID_HOME}/bin/srvctl status scan']
 
 if __name__ == "__main__":
     if scc.os_checks:

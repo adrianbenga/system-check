@@ -34,42 +34,44 @@ encoding = "utf-8"
 # Oracle specific variables
 # ----------------------------------------------------------------------------
 
+ORACLE_HOME = '/u01/app/oracle/product/19.0.0/db_1'
+GRID_HOME = '/u01/app/oracle/product/19.0.0/db_1'
+LD_LIBRARY_PATH = '/u01/app/oracle/product/19.0.0/db_1/lib'
+PATH = '/home/oracle/.local/bin:/home/oracle/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/u01/app/oracle/product/19.0.0/db_1/bin'
 # oracle_host = '192.168.0.38'
 oracle_host = '192.168.86.28'
 oracle_user = 'system'
 oracle_user_psswd = 'system123'
 oracle_service = 'orcldb'
-connect_string = f'{oracle_user}/{oracle_user_psswd}@{oracle_host}/{oracle_service}'
+oracle_port = '1521'
+connect_string = f'{oracle_user}/{oracle_user_psswd}@{oracle_host}:{oracle_port}/{oracle_service}'
 scan_listeners = ['LISTENER_SCAN1', 'LISTENER_SCAN2', 'LISTENER_SCAN3']
 # scan_name = 'rac-scan.isctr-mt.ro'
 scan_name = 'localhost'
 scan_vips = ['scan1', 'scan2', 'scan3']
-scan_connect_string = f'{oracle_user}/{oracle_user_psswd}@{scan_name}/{oracle_service}'
-
-
+scan_connect_string = f'{oracle_user}/{oracle_user_psswd}@{scan_name}:{oracle_port}/{oracle_service}'
 
 # ----------------------------------------------------------------------------
 # Defined thresholds
 # ----------------------------------------------------------------------------
 
-# OS thresholds
 # CPU thresholds
 cpu_idle_critical_threshold = 0
 cpu_idle_warning_threshold = 15
+
 # Mem thresholds
 mem_critical_threshold_percent = 0.05
 mem_warning_threshold_percent = 0.1
+
 # File systems thresholds
 fs_used_critical_threshold = 95
 fs_used_warning_threshold = 90
 
-# ASM thresholds
-# asm diskgroups occupancy thresholds
+# ASM thresholds - diskgroups occupancy thresholds
 asm_dg_used_critical_threshold = 95
 asm_dg_used_warning_threshold = 90
 
-# Database thresholds
-# tablespace occupancy thresholds
+# Database thresholds - tablespace occupancy thresholds
 tbs_used_critical_threshold = 95
 tbs_used_warning_threshold = 90
 
